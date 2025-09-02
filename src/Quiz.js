@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useMsal } from "@azure/msal-react";
 import Leaderboard from "./Leaderboard";
 
 function Quiz() {
-  const { instance, accounts } = useMsal();
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -12,23 +10,36 @@ function Quiz() {
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
   const [resultSaved, setResultSaved] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
-  // Only allow access if user is authenticated
-  const isAuthenticated = accounts.length > 0;
-  const user = isAuthenticated ? accounts[0] : null;
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
+  const fetchQuestions = () => {
+    setLoading(true);
+    setFetchError(null);
     fetch("http://localhost:7071/api/getQuestions")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch questions.");
+        return res.json();
+      })
       .then((data) => {
         setQuestions(data);
         setLoading(false);
+      })
+      .catch((err) => {
+        setFetchError(
+          err.message || "An error occurred while fetching questions."
+        );
+        setLoading(false);
       });
-  }, [isAuthenticated]);
+  };
 
   useEffect(() => {
-    if (quizComplete && !resultSaved && user) {
+    fetchQuestions();
+  }, []);
+
+  useEffect(() => {
+    if (quizComplete && !resultSaved) {
+      setSubmitError(null);
       fetch("http://localhost:7071/api/submitResult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -36,29 +47,32 @@ function Quiz() {
           score,
           totalQuestions: questions.length,
           timestamp: new Date().toISOString(),
-          userId: user.homeAccountId,
-          username: user.username,
-          name: user.name,
         }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to submit results.");
+          return res.json();
+        })
         .then(() => setResultSaved(true))
-        .catch(() => setResultSaved(true));
+        .catch((err) => {
+          setSubmitError(
+            err.message || "An error occurred while submitting results."
+          );
+          setResultSaved(true); // Prevent repeated attempts
+        });
     }
-  }, [quizComplete, resultSaved, score, questions.length, user]);
-
-  if (!isAuthenticated) {
-    return (
-      <div>
-        <h2>Please log in to take the quiz.</h2>
-        <button onClick={() => instance.loginPopup()}>
-          Login with Microsoft
-        </button>
-      </div>
-    );
-  }
+  }, [quizComplete, resultSaved, score, questions.length]);
 
   if (loading) return <div>Loading questions...</div>;
+
+  if (fetchError)
+    return (
+      <div>
+        <p style={{ color: "red" }}>Error: {fetchError}</p>
+        <button onClick={fetchQuestions}>Retry</button>
+      </div>
+    );
+
   if (!questions.length) return <div>No questions found.</div>;
 
   const question = questions[current];
@@ -88,6 +102,11 @@ function Quiz() {
         <p>
           Your score: {score} / {questions.length}
         </p>
+        {submitError && (
+          <p style={{ color: "red" }}>
+            Error submitting results: {submitError}
+          </p>
+        )}
         <Leaderboard />
       </div>
     );
