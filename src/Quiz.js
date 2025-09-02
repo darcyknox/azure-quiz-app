@@ -1,29 +1,34 @@
 import React, { useState, useEffect } from "react";
+import { useMsal } from "@azure/msal-react";
 import Leaderboard from "./Leaderboard";
 
 function Quiz() {
+  const { instance, accounts } = useMsal();
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [score, setScore] = useState(0); // New: track score
-  const [quizComplete, setQuizComplete] = useState(false); // New: track completion
-  const [resultSaved, setResultSaved] = useState(false); // Add this state
+  const [score, setScore] = useState(0);
+  const [quizComplete, setQuizComplete] = useState(false);
+  const [resultSaved, setResultSaved] = useState(false);
+
+  // Only allow access if user is authenticated
+  const isAuthenticated = accounts.length > 0;
+  const user = isAuthenticated ? accounts[0] : null;
 
   useEffect(() => {
-    // Change the URL if your function app is deployed to Azure
+    if (!isAuthenticated) return;
     fetch("http://localhost:7071/api/getQuestions")
       .then((res) => res.json())
       .then((data) => {
         setQuestions(data);
         setLoading(false);
       });
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (quizComplete && !resultSaved) {
-      // Send result to backend
+    if (quizComplete && !resultSaved && user) {
       fetch("http://localhost:7071/api/submitResult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,13 +36,27 @@ function Quiz() {
           score,
           totalQuestions: questions.length,
           timestamp: new Date().toISOString(),
+          userId: user.homeAccountId,
+          username: user.username,
+          name: user.name,
         }),
       })
         .then((res) => res.json())
         .then(() => setResultSaved(true))
         .catch(() => setResultSaved(true));
     }
-  }, [quizComplete, resultSaved, score, questions.length]);
+  }, [quizComplete, resultSaved, score, questions.length, user]);
+
+  if (!isAuthenticated) {
+    return (
+      <div>
+        <h2>Please log in to take the quiz.</h2>
+        <button onClick={() => instance.loginPopup()}>
+          Login with Microsoft
+        </button>
+      </div>
+    );
+  }
 
   if (loading) return <div>Loading questions...</div>;
   if (!questions.length) return <div>No questions found.</div>;
