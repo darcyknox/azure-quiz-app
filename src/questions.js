@@ -1,10 +1,10 @@
 export const questions = [
+    /*
     {
         question: "What is Azure?",
         options: ["Cloud platform", "Operating system", "Database", "IDE"],
         answer: "Cloud platform"
     },
-    // Add more questions here
     {
         question: "Which network concept allows communication between different Azure services?",
         options: ["VNet", "Subnet", "Firewall", "Load Balancer"],
@@ -75,6 +75,7 @@ export const questions = [
         ],
         answer: "Continuous integration and continuous delivery (CI/CD)"
     },
+    */
     {
         question: "Which Azure service is used for data warehousing?",
         options: ["Azure Synapse Analytics", "Azure SQL Database", "Azure Data Lake", "Azure Cosmos DB"],
