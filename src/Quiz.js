@@ -16,7 +16,7 @@ function Quiz() {
   const fetchQuestions = () => {
     setLoading(true);
     setFetchError(null);
-    fetch("https://azure-quiz-api-dk2025.azurewebsites.net/api/questions")
+    fetch("https://azure-quiz-api-dk2025.azurewebsites.net/api/getQuestions")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch questions.");
         return res.json();
