@@ -16,7 +16,7 @@ function Quiz() {
   const fetchQuestions = () => {
     setLoading(true);
     setFetchError(null);
-    fetch("http://localhost:7071/api/getQuestions")
+    fetch("https://azure-quiz-api-dk2025.azurewebsites.net/api/questions")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch questions.");
         return res.json();
@@ -40,7 +40,7 @@ function Quiz() {
   useEffect(() => {
     if (quizComplete && !resultSaved) {
       setSubmitError(null);
-      fetch("http://localhost:7071/api/submitResult", {
+      fetch("https://azure-quiz-api-dk2025.azurewebsites.net/api/submitResult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

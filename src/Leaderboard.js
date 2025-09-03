@@ -5,7 +5,7 @@ function Leaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:7071/api/getLeaderboard")
+    fetch("https://azure-quiz-api-dk2025.azurewebsites.net/api/scores")
       .then((res) => res.json())
       .then((data) => {
         setScores(data);
