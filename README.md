@@ -1,7 +1,7 @@
 # Azure-Themed Quiz App
 
 ## Overview
-A React-based quiz app to help users learn Microsoft Azure fundamentals.
+A React-based quiz application to help users learn Microsoft Azure fundamentals.
 
 ## Features
 - Multiple-choice questions
